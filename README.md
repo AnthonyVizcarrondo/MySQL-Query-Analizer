@@ -17,10 +17,9 @@ La herramienta realiza dos niveles de análisis:
 Sigue estos pasos para configurar el proyecto en tu máquina local.
 
 1. Clonar el repositorio
-2. 
-Descarga el código en tu máquina
-
+2. Descarga el código en tu máquina
 3. Crear un Entorno Virtual
+   
 Es altamente recomendado usar un entorno virtual para evitar conflictos con las librerías del sistema (especialmente en Linux/Ubuntu).
 
 En Linux / macOS:
@@ -33,7 +32,7 @@ En Windows:
 python -m venv venv
 .\venv\Scripts\activate
 
-3. Instalar Dependencias
+4. Instalar Dependencias
 Instala las librerías necesarias (streamlit, mysql-connector-python, pandas, sqlparse) ejecutando:
 
 pip install -r requirements.txt
