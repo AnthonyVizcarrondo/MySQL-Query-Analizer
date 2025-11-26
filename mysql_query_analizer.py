@@ -4,7 +4,7 @@ import pandas as pd
 import sqlparse
 import re
 
-# Configuración inicial
+# --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(page_title="SQL Optimizer", layout="wide", page_icon="🛡️")
 
 # --- BARRA LATERAL ---
@@ -16,13 +16,32 @@ with st.sidebar:
     
     st.divider()
     st.header("1. Conexión MySQL")
+    
     db_host = st.text_input("Host", "localhost")
-    db_user = st.text_input("Usuario", "root")
+    db_user = st.text_input("Usuario", type="password") 
     db_pass = st.text_input("Contraseña", type="password")
-    db_name = st.text_input("Base de Datos")
+    db_name = st.text_input("Base de Datos", "test_db")
+    
+# --- LÓGICA DEL BOTÓN DE PRUEBA ---
+    if st.button("Probar Conexión", type="primary"):
+        try:
+            test_conn = mysql.connector.connect(
+                host=db_host,
+                user=db_user,
+                password=db_pass,
+                database=db_name,
+                connection_timeout=5
+            )
+            if test_conn.is_connected():
+                st.success("✅ ¡Conexión Exitosa!")
+                test_conn.close()
+        except mysql.connector.Error as err:
+            st.error(f"❌ Error de conexión: {err}")
+        except Exception as e:
+            st.error(f"❌ Error general: {e}")
 
 # --- LÓGICA PRINCIPAL ---
-st.title("🛡️ Validador de Consultas SQL")
+st.title("🛡️ Validador de Calidad SQL")
 st.markdown("Analiza consultas buscando **Full Table Scans** y problemas de rendimiento.")
 
 query = st.text_area("2. Escribe tu consulta SQL:", height=150, placeholder="SELECT * FROM tabla...")
@@ -45,11 +64,11 @@ if st.button("Validar y Analizar", type="primary"):
             explain_df = pd.DataFrame(cursor.fetchall())
             conn.close()
 
-            # 3. Mostrar Tabla EXPLAIN (Opcional, en un expander para limpiar visualmente)
+            # 3. Mostrar Tabla EXPLAIN
             with st.expander("Ver detalle técnico (Tabla EXPLAIN)"):
-                st.dataframe(explain_df, use_container_width=True)
+                st.dataframe(explain_df) 
 
-            # 4. ANÁLISIS Y REPORTE (AQUÍ ESTÁ LA MEJORA VISUAL)
+            # 4. ANÁLISIS Y REPORTE
             st.divider()
             st.subheader("📊 Reporte de Optimización")
             
@@ -76,27 +95,22 @@ if st.button("Validar y Analizar", type="primary"):
                 if 'Using temporary' in extra:
                     warnings.append(("Medio", f"Tabla Temporal en '{table}'", "Se creó una tabla temporal en disco/memoria para resolver la consulta."))
 
-            # 5. RENDERIZADO VISUAL BONITO
+            # 5. RENDERIZADO VISUAL
             if not warnings:
                 st.success("✅ **¡Excelente trabajo!** No se detectaron problemas graves de rendimiento.", icon="🎉")
             else:
-                # Contamos errores para mostrar un resumen
+                # Contamos errores
                 n_criticos = sum(1 for w in warnings if w[0] == "Crítico")
                 if n_criticos > 0:
-                    st.error(f"⚠️ Se encontraron {n_criticos} problemas críticos que afectan el rendimiento directamente.")
+                    st.error(f"⚠️ Se encontraron {n_criticos} problemas críticos.")
                 
-                # Renderizamos cada tarjeta
+                # Mostramos las tarjetas bonitas
                 for nivel, titulo, consejo in warnings:
                     if nivel == "Crítico":
-                        # Caja ROJA para críticos
                         st.error(f"**{titulo}**\n\n💡 *{consejo}*", icon="🔥")
-                    
                     elif nivel == "Alto":
-                        # Caja AMARILLA para altos
                         st.warning(f"**{titulo}**\n\n💡 *{consejo}*", icon="⚠️")
-                    
                     elif nivel == "Medio":
-                        # Caja AZUL para medios/infos
                         st.info(f"**{titulo}**\n\n💡 *{consejo}*", icon="ℹ️")
 
         except mysql.connector.Error as err:
